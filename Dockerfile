@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND noninteractive
 #RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
 #RUN cat /etc/apt/sources.list
 #RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list
-RUN apt-get update && apt-get install -y dialog tzdata locales apt-utils debconf git curl build-essential nodejs python2.7
+RUN apt-get update && apt-get install -y dialog tzdata locales apt-utils debconf git curl build-essential nodejs python2.7 vim
 #RUN apt-get update && apt-get install -y build-essential g++ curl libssl-dev apache2-utils git libxml2-dev sshfs vim python-pip nethogs
 RUN locale-gen en_US.UTF-8 && echo "export LC_ALL=en_US.UTF-8" >> ~/.bashrc
 #RUN echo 'Asia/Shanghai' > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata
