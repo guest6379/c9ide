@@ -1,52 +1,38 @@
-# ------------------------------------------------------------------------------
-# Based on a work at https://github.com/docker/docker.
-# ------------------------------------------------------------------------------
-# Pull base image.
-FROM kdelfour/supervisor-docker
+
+
+FROM ubuntu:16.04
 MAINTAINER Kevin Delfour <kevin@delfour.eu>
+
+ENV DEBIAN_FRONTEND noninteractive
 
 # ------------------------------------------------------------------------------
 # Install base
-# archive.ubuntu.com = /etc/apt/sources.list
-RUN apt-get update && apt-get install -y build-essential g++ curl libssl-dev apache2-utils git libxml2-dev sshfs vim python-pip
+#RUN sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
+#RUN cat /etc/apt/sources.list
+#RUN sed -i 's/archive.ubuntu.com/mirrors.163.com/g' /etc/apt/sources.list
+RUN apt-get update && apt-get install -y dialog tzdata locales apt-utils debconf git curl build-essential nodejs python2.7
+#RUN apt-get update && apt-get install -y build-essential g++ curl libssl-dev apache2-utils git libxml2-dev sshfs vim python-pip nethogs
 RUN locale-gen en_US.UTF-8 && echo "export LC_ALL=en_US.UTF-8" >> ~/.bashrc
-RUN echo 'Asia/Chongqing' >/etc/timezone && dpkg-reconfigure -f noninteractive tzdata
+#RUN echo 'Asia/Shanghai' > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata
+RUN ln -fs /usr/share/zoneinfo/Asia/Chongqing /etc/localtime && dpkg-reconfigure -f noninteractive tzdata
+#ADD .vimrc /root/.vimrc
 
 
-# ------------------------------------------------------------------------------
-# Install Node.js
-RUN curl -sL https://deb.nodesource.com/setup | bash -
-RUN apt-get install -y nodejs
-    
-# ------------------------------------------------------------------------------
-# Install Cloud9
-RUN git clone https://github.com/c9/core.git /cloud9
-WORKDIR /cloud9
-RUN scripts/install-sdk.sh
-
-# Tweak standlone.js conf
-ADD standalone.js /cloud9/configs/standalone.js
-RUN sed -i -e 's_127.0.0.1_0.0.0.0_g' /cloud9/configs/standalone.js
+# checkout c9core and install it
+# RUN git clone https://gitee.com/l1191871/c9core.git c9sdk
+RUN git clone https://github.com/c9/core.git c9sdk
+RUN cd /c9sdk && scripts/install-sdk.sh
 
 
-# Add supervisord conf
-ADD conf/cloud9.conf /etc/supervisor/conf.d/
+RUN mkdir /wksp
+VOLUME /wksp
 
-# ------------------------------------------------------------------------------
-# Add volumes
-RUN mkdir /workspace
-VOLUME /workspace
-
-# ------------------------------------------------------------------------------
 # Clean up APT when done.
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# ------------------------------------------------------------------------------
 # Expose ports.
 EXPOSE 80
-EXPOSE 3000
 EXPOSE 8080
 
-# ------------------------------------------------------------------------------
-# Start supervisor, define default command.
-CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+CMD ["nodejs", "/c9sdk/server.js", "--listen","0.0.0.0", "--port", "80", "-w", "/wksp", "--auth", "user:passwd"]
+
